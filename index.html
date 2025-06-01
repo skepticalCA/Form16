@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAN Search Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #4f46e5, #7c3aed);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .upload-section {
+            margin-bottom: 40px;
+        }
+
+        .upload-zone {
+            border: 3px dashed #d1d5db;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            background: #f9fafb;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-zone:hover {
+            border-color: #4f46e5;
+            background: #f0f9ff;
+            transform: translateY(-2px);
+        }
+
+        .upload-zone.dragover {
+            border-color: #4f46e5;
+            background: #e0e7ff;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #6b7280;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            font-size: 1.2rem;
+            color: #374151;
+            margin-bottom: 10px;
+        }
+
+        .upload-subtext {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .search-section {
+            margin-bottom: 30px;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            background: white;
+            padding: 8px;
+            border-radius: 50px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+
+        .search-container:focus-within {
+            border-color: #4f46e5;
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.2);
+        }
+
+        .search-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            background: transparent;
+        }
+
+        .search-btn, .export-btn {
+            background: linear-gradient(45deg, #4f46e5, #7c3aed);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-btn:hover, .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+        }
+
+        .export-btn {
+            background: linear-gradient(45deg, #059669, #10b981);
+            margin-top: 20px;
+        }
+
+        .export-btn:hover {
+            box-shadow: 0 10px 20px rgba(5, 150, 105, 0.3);
+        }
+
+        .results-section {
+            margin-top: 30px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .results-count {
+            font-size: 1.1rem;
+            color: #374151;
+            font-weight: 600;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        .table th {
+            background: linear-gradient(45deg, #f8fafc, #f1f5f9);
+            padding: 20px 15px;
+            text-align: left;
+            font-weight: 700;
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .table td {
+            padding: 18px 15px;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background 0.2s ease;
+        }
+
+        .table tr:hover {
+            background: #f8fafc;
+        }
+
+        .table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+            font-size: 1.1rem;
+        }
+
+        .no-data-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .status-message {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .status-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .status-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .search-container {
+                flex-direction: column;
+                border-radius: 15px;
+            }
+            
+            .search-btn {
+                border-radius: 10px;
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .table-container {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 PAN Search Tool</h1>
+            <p>Upload JSON data and search by PAN number</p>
+        </div>
+        
+        <div class="content">
+            <div class="upload-section">
+                <div class="upload-zone" id="uploadZone">
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-text">Drop your JSON file here</div>
+                    <div class="upload-subtext">or click to browse</div>
+                    <input type="file" class="file-input" id="fileInput" accept=".json">
+                </div>
+            </div>
+
+            <div class="status-message" id="statusMessage"></div>
+
+            <div class="search-section" id="searchSection" style="display: none;">
+                <div class="search-container">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Enter PAN number (e.g., AAFPN6222N)">
+                    <button class="search-btn" id="searchBtn">
+                        🔍 Search
+                    </button>
+                </div>
+            </div>
+
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <div class="results-header">
+                    <div class="results-count" id="resultsCount">0 records found</div>
+                    <button class="export-btn" id="exportBtn" style="display: none;">
+                        📥 Export to CSV
+                    </button>
+                </div>
+                
+                <div class="table-container">
+                    <table class="table" id="resultsTable">
+                        <thead>
+                            <tr>
+                                <th>Vendor Code</th>
+                                <th>PAN</th>
+                                <th>Quarter</th>
+                                <th>Year</th>
+                                <th>Form Type</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let jsonData = [];
+        let currentResults = [];
+
+        // Auto-load JSON file on page load
+        window.addEventListener('load', function() {
+            loadJSONFile();
+        });
+
+        function loadJSONFile() {
+            showStatus('Loading data...', 'success');
+            
+            fetch('data.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Could not load data file');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    jsonData = data;
+                    
+                    // Validate data structure
+                    if (jsonData.length > 0) {
+                        const requiredFields = ['Vendor Code', 'PAN', 'Quarter', 'Year', 'Form Type'];
+                        const firstRecord = jsonData[0];
+                        const missingFields = requiredFields.filter(field => !(field in firstRecord));
+                        
+                        if (missingFields.length > 0) {
+                            throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+                        }
+                    }
+
+                    showStatus(`Successfully loaded ${jsonData.length} records! You can now search by PAN.`, 'success');
+                    searchSection.style.display = 'block';
+                    searchSection.classList.add('fade-in');
+                    searchInput.focus();
+                    
+                    // Hide upload section since data is loaded
+                    document.querySelector('.upload-section').style.display = 'none';
+                })
+                .catch(error => {
+                    showStatus(`Error loading data: ${error.message}. You can still upload a JSON file manually.`, 'error');
+                });
+        }
+
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const searchSection = document.getElementById('searchSection');
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const resultsSection = document.getElementById('resultsSection');
+        const tableBody = document.getElementById('tableBody');
+        const resultsCount = document.getElementById('resultsCount');
+        const exportBtn = document.getElementById('exportBtn');
+        const statusMessage = document.getElementById('statusMessage');
+
+        // File upload handlers
+        uploadZone.addEventListener('click', () => fileInput.click());
+        uploadZone.addEventListener('dragover', handleDragOver);
+        uploadZone.addEventListener('dragleave', handleDragLeave);
+        uploadZone.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+
+        // Search handlers
+        searchBtn.addEventListener('click', performSearch);
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') performSearch();
+        });
+
+        // Export handler
+        exportBtn.addEventListener('click', exportToCSV);
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                processFile(files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            if (e.target.files.length > 0) {
+                processFile(e.target.files[0]);
+            }
+        }
+
+        function processFile(file) {
+            if (!file.name.toLowerCase().endsWith('.json')) {
+                showStatus('Please select a JSON file.', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    jsonData = JSON.parse(e.target.result);
+                    if (!Array.isArray(jsonData)) {
+                        throw new Error('JSON must be an array');
+                    }
+                    
+                    // Validate data structure
+                    if (jsonData.length > 0) {
+                        const requiredFields = ['Vendor Code', 'PAN', 'Quarter', 'Year', 'Form Type'];
+                        const firstRecord = jsonData[0];
+                        const missingFields = requiredFields.filter(field => !(field in firstRecord));
+                        
+                        if (missingFields.length > 0) {
+                            throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+                        }
+                    }
+
+                    showStatus(`Successfully loaded ${jsonData.length} records!`, 'success');
+                    searchSection.style.display = 'block';
+                    searchSection.classList.add('fade-in');
+                    searchInput.focus();
+                    
+                } catch (error) {
+                    showStatus(`Error parsing JSON: ${error.message}`, 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function performSearch() {
+            const searchTerm = searchInput.value.trim().toUpperCase();
+            
+            if (!searchTerm) {
+                showStatus('Please enter a PAN number to search.', 'error');
+                return;
+            }
+
+            if (jsonData.length === 0) {
+                showStatus('Please upload a JSON file first.', 'error');
+                return;
+            }
+
+            currentResults = jsonData.filter(record => 
+                record.PAN && record.PAN.toUpperCase().includes(searchTerm)
+            );
+
+            displayResults();
+        }
+
+        function displayResults() {
+            resultsSection.style.display = 'block';
+            resultsSection.classList.add('fade-in');
+            
+            resultsCount.textContent = `${currentResults.length} record${currentResults.length !== 1 ? 's' : ''} found`;
+            
+            if (currentResults.length > 0) {
+                exportBtn.style.display = 'block';
+                
+                tableBody.innerHTML = currentResults.map(record => `
+                    <tr>
+                        <td>${record['Vendor Code'] || '-'}</td>
+                        <td>${record['PAN'] || '-'}</td>
+                        <td>${record['Quarter'] || '-'}</td>
+                        <td>${record['Year'] || '-'}</td>
+                        <td>${record['Form Type'] || '-'}</td>
+                    </tr>
+                `).join('');
+            } else {
+                exportBtn.style.display = 'none';
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="no-data">
+                            <div class="no-data-icon">📄</div>
+                            <div>No records found for the searched PAN</div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        function exportToCSV() {
+            if (currentResults.length === 0) {
+                showStatus('No data to export.', 'error');
+                return;
+            }
+
+            const headers = ['Vendor Code', 'PAN', 'Quarter', 'Year', 'Form Type'];
+            const csvContent = [
+                headers.join(','),
+                ...currentResults.map(record => 
+                    headers.map(header => `"${(record[header] || '').toString().replace(/"/g, '""')}"`).join(',')
+                )
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `pan_search_results_${new Date().toISOString().slice(0, 10)}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showStatus('CSV file downloaded successfully!', 'success');
+        }
+
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message status-${type}`;
+            statusMessage.style.display = 'block';
+            
+            setTimeout(() => {
+                statusMessage.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
